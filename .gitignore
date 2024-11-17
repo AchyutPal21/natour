@@ -1,0 +1,37 @@
+# Node.js dependencies
+node_modules/
+
+# TypeScript cache
+*.tsbuildinfo
+
+dist/
+build/
+
+# Logs
+npm-debug.log*
+
+# Environment variables
+.env
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDEs and editors
+.idea/
+.vscode/
+*.sublime-workspace
+
+# Optional: Ignore any local testing databases, such as SQLite
+*.sqlite
+*.db
+
+# Optional: Ignore test coverage reports
+coverage/
+
+# Optional: Ignore compiled JavaScript and map files (if not in dist/)
+*.js
+*.js.map
+
+
+dev-data

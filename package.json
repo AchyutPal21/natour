@@ -1,0 +1,29 @@
+{
+  "name": "natours",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/server.js",
+  "scripts": {
+    "build": "npx tsc",
+    "watch": "tsx watch ./src/server.ts",
+    "lint": "eslint . --ext .ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "mongoose": "^8.8.1",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^22.7.5",
+    "nodemon": "^3.1.7",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}
