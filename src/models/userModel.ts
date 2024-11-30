@@ -1,9 +1,15 @@
-import { IUserEntity } from "@entities/user/IUserEntity.js";
 import { UserRole } from "@enums/UserRoleEnum.js";
-import { Document, Schema, Types } from "mongoose";
+import mongoose, { Document, Model, Schema, Types } from "mongoose";
 
-interface IUserDocument extends IUserEntity, Document {
+interface IUserDocument extends Document {
   _id: Types.ObjectId;
+  userName: string;
+  userPassword: string;
+  userEmail: string;
+  userRole: UserRole;
+  userIsActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const UserSchema = new Schema<IUserDocument>(
@@ -39,4 +45,9 @@ const UserSchema = new Schema<IUserDocument>(
   }
 );
 
-export { IUserDocument, UserSchema };
+const UserModel: Model<IUserDocument> = mongoose.model<IUserDocument>(
+  "User",
+  UserSchema
+);
+
+export { UserModel };

@@ -1,4 +1,4 @@
-import userController from "@controllers/UserController.js";
+/* import userController from "@controllers/UserController.js";
 import { validateId } from "@middlewares/param/validateId.js";
 import { Router } from "express";
 
@@ -15,3 +15,4 @@ router.patch("/:id", userController.updateUser);
 router.delete("/:id", userController.deleteUser);
 
 export { router };
+ */

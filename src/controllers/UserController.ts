@@ -1,6 +1,6 @@
-import { CreateUserDTO } from "@dtos/user/CreateUserDTO.js";
+/* import { CreateUserDTO } from "@dtos/user/CreateUserDTO.js";
 import { HttpStatus } from "@enums/HttpStatusEnum.js";
-import { UserServiceImpl } from "@implementations/UserServiceImpl.js";
+import { UserServiceImpl } from "@implementations/UserService.js";
 import { IUserService } from "@services/IUserService.js";
 import { NextFunction, Request, Response } from "express";
 
@@ -62,3 +62,4 @@ class UserController {
 }
 
 export default new UserController();
+ */

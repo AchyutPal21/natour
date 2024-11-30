@@ -1,15 +1,14 @@
+import tourController from "@controllers/TourController.js";
 import { Router } from "express";
-import { validateId } from "../middlewares/param/validateId.js";
 
 const router = Router();
 
-router.param("id", validateId("TOUR"));
+// router.param("id", validateId("TOUR"));
 
-// router.get("/", getTours);
-// router.post("/", addTour);
-
-// router.get("/:id", getTour);
-// router.patch("/:id", updateTour);
-// router.delete("/:id", deleteTour);
+router.get("/:id", tourController.getTour);
+router.get("/", tourController.getTours);
+router.post("/", tourController.addTour);
+router.patch("/:id", tourController.updateTour);
+router.delete("/:id", tourController.deleteTour);
 
 export { router };
