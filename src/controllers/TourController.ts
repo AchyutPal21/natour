@@ -3,6 +3,7 @@ import { HttpStatus } from "@enums/HttpStatusEnum.js";
 import { ResponseCode } from "@enums/ResponseCodesEnum.js";
 import { TourService } from "@implementations/TourService.js";
 import { ITourService } from "@services/ITourService.js";
+import { TourQuery } from "@shared/types/queryObject.js";
 import { NextFunction, Request, Response } from "express";
 
 class TourController {
@@ -21,8 +22,18 @@ class TourController {
     const tourData = req.body;
     const createTourDto = new CreateTourDTO(
       tourData.tourName,
+      tourData.duration,
+      tourData.maxGroupSize,
+      tourData.difficulty,
+      tourData.ratings,
+      tourData.ratingsAverage,
       tourData.price,
-      tourData.rating
+      tourData.priceDiscount,
+      tourData.summary,
+      tourData.description,
+      tourData.imageCover,
+      tourData.images,
+      tourData.startDates
     );
 
     try {
@@ -39,7 +50,8 @@ class TourController {
 
   async getTours(req: Request, res: Response, next: NextFunction) {
     try {
-      const tours = await this.tourService.getAllTour();
+      const query: TourQuery = req.query;
+      const tours = await this.tourService.getAllTour(query);
       res.status(HttpStatus.OK).json({
         status: "success",
         code: ResponseCode.OK,
