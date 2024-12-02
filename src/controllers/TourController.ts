@@ -3,7 +3,7 @@ import { HttpStatus } from "@enums/HttpStatusEnum.js";
 import { ResponseCode } from "@enums/ResponseCodesEnum.js";
 import { TourService } from "@implementations/TourService.js";
 import { ITourService } from "@services/ITourService.js";
-import { TourQuery } from "@shared/types/queryObject.js";
+import { TourQuery } from "@shared/types/toursTypes.js";
 import { NextFunction, Request, Response } from "express";
 
 class TourController {
@@ -16,6 +16,8 @@ class TourController {
     this.getTour = this.getTour.bind(this);
     this.updateTour = this.updateTour.bind(this);
     this.deleteTour = this.deleteTour.bind(this);
+    this.toursStats = this.toursStats.bind(this);
+    this.toursYearlyPlan = this.toursYearlyPlan.bind(this);
   }
 
   async addTour(req: Request, res: Response, next: NextFunction) {
@@ -100,6 +102,29 @@ class TourController {
         code: ResponseCode.NO_CONTENT,
         status: "success",
         data: null,
+      });
+    } catch (error) {}
+  }
+
+  async toursStats(req: Request, res: Response, next: NextFunction) {
+    try {
+      const stats = await this.tourService.getToursStats();
+      res.status(HttpStatus.OK).json({
+        code: ResponseCode.OK,
+        status: "success",
+        data: stats,
+      });
+    } catch (error) {}
+  }
+
+  async toursYearlyPlan(req: Request, res: Response, next: NextFunction) {
+    try {
+      const year = +req.params.year;
+      const yearlyPlan = await this.tourService.getToursYearlyPlan(year);
+      res.status(HttpStatus.OK).json({
+        code: ResponseCode.OK,
+        status: "success",
+        data: yearlyPlan,
       });
     } catch (error) {}
   }

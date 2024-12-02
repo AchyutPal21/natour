@@ -19,6 +19,10 @@ router.get(
   tourController.getTours
 );
 
+// =>                               AGGREGATED STATISTICS
+router.get("/tours-stats", tourController.toursStats);
+router.get("/tours-yearly-plan/:year", tourController.toursYearlyPlan);
+
 // =>                               APPLICATION ROUTES
 router.get("/", tourController.getTours);
 router.post("/", tourController.addTour);

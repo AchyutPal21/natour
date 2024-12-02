@@ -1,6 +1,6 @@
 import { ICreateTourDTO } from "@dtos/tour/ICreateTourDTO.js";
 import { ICreateTourResponseDTO } from "@dtos/tour/ICreateTourResponseDTO.js";
-import { TourQuery } from "@shared/types/queryObject.js";
+import { TourQuery, TourStats } from "@shared/types/toursTypes.js";
 
 interface ITourService {
   createTour(tour: ICreateTourDTO): Promise<ICreateTourResponseDTO>;
@@ -11,6 +11,8 @@ interface ITourService {
   getTourById(tourId: string): Promise<ICreateTourResponseDTO | null>;
   getAllTour(query: TourQuery): Promise<Partial<ICreateTourResponseDTO>[]>;
   deleteTourById(tourId: string): Promise<ICreateTourResponseDTO | null>;
+  getToursStats(): Promise<TourStats[]>;
+  getToursYearlyPlan(year: number): Promise<TourStats[]>;
 }
 
 export { ITourService };

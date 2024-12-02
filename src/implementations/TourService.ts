@@ -4,7 +4,7 @@ import { ICreateTourResponseDTO } from "@dtos/tour/ICreateTourResponseDTO.js";
 import { ITourDocument, TourModel } from "@models/tourModel.js";
 import { ITourService } from "@services/ITourService.js";
 import { APIQueryFeatures } from "@shared/classes/APIQueryFeatures.js";
-import { TourQuery } from "@shared/types/queryObject.js";
+import { TourQuery, TourStats } from "@shared/types/toursTypes.js";
 
 class TourService implements ITourService {
   private tourModel;
@@ -75,7 +75,9 @@ class TourService implements ITourService {
     );
   }
 
-  async createTour(tour: ICreateTourDTO): Promise<ICreateTourResponseDTO> {
+  public async createTour(
+    tour: ICreateTourDTO
+  ): Promise<ICreateTourResponseDTO> {
     try {
       const newTour = await this.tourModel.create(tour);
       const tourResponse = this.createTourResponse(newTour);
@@ -86,7 +88,7 @@ class TourService implements ITourService {
     }
   }
 
-  async updateTour(
+  public async updateTour(
     tourId: string,
     updates: Partial<ICreateTourDTO>
   ): Promise<ICreateTourResponseDTO | null> {
@@ -104,7 +106,7 @@ class TourService implements ITourService {
     return tourResponse;
   }
 
-  async getAllTour(
+  public async getAllTour(
     query: TourQuery
   ): Promise<Partial<ICreateTourResponseDTO>[]> {
     const apiQueryFeatures = new APIQueryFeatures<ITourDocument>(
@@ -128,7 +130,9 @@ class TourService implements ITourService {
     });
   }
 
-  async getTourById(tourId: string): Promise<ICreateTourResponseDTO | null> {
+  public async getTourById(
+    tourId: string
+  ): Promise<ICreateTourResponseDTO | null> {
     const tour = await this.tourModel.findById(tourId);
     if (!tour) {
       return null;
@@ -139,12 +143,80 @@ class TourService implements ITourService {
     return tourResponse;
   }
 
-  async deleteTourById(tourId: string): Promise<ICreateTourResponseDTO | null> {
+  public async deleteTourById(
+    tourId: string
+  ): Promise<ICreateTourResponseDTO | null> {
     const deletedTour = await this.tourModel.findByIdAndDelete(tourId);
 
     if (!deletedTour) return null;
 
     return this.createTourResponse(deletedTour);
+  }
+
+  public async getToursStats(): Promise<TourStats[]> {
+    const stats = await this.tourModel.aggregate([
+      {
+        $match: { ratingsAverage: { $gte: 4 } },
+      },
+      {
+        $group: {
+          _id: "$difficulty",
+          totalTours: { $sum: 1 },
+          totalRatings: { $sum: "$ratings" },
+          averageRating: { $avg: "$ratingsAverage" },
+          averagePrice: { $avg: "$price" },
+          minimumPrice: { $min: "$price" },
+          maximumPrice: { $max: "$price" },
+        },
+      },
+      {
+        $sort: { minimumPrice: 1 },
+      },
+      // {
+      //   $match: { _id: { $ne: "easy" } },
+      // },
+    ]);
+
+    return stats;
+  }
+
+  public async getToursYearlyPlan(year: number): Promise<TourStats[]> {
+    const monthlyTourPlan = await this.tourModel.aggregate([
+      {
+        $unwind: "$startDates",
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $month: "$startDates" },
+          toursPerMonth: { $sum: 1 },
+          tours: { $push: "$tourName" },
+        },
+      },
+      {
+        $addFields: { month: "$_id" },
+      },
+      {
+        $project: {
+          _id: 0,
+        },
+      },
+      {
+        $sort: {
+          toursPerMonth: -1,
+          month: 1,
+        },
+      },
+    ]);
+
+    return monthlyTourPlan;
   }
 }
 
