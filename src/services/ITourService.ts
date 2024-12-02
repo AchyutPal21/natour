@@ -9,7 +9,7 @@ interface ITourService {
     updates: Partial<ICreateTourDTO>
   ): Promise<ICreateTourResponseDTO | null>;
   getTourById(tourId: string): Promise<ICreateTourResponseDTO | null>;
-  getAllTour(query: TourQuery): Promise<ICreateTourResponseDTO[]>;
+  getAllTour(query: TourQuery): Promise<Partial<ICreateTourResponseDTO>[]>;
   deleteTourById(tourId: string): Promise<ICreateTourResponseDTO | null>;
 }
 

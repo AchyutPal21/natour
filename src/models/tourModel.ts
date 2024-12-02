@@ -90,6 +90,21 @@ const TourSchema = new Schema<ITourDocument>(
   }
 );
 
+// TourSchema.set("toObject", {
+//   transform: (doc, ret) => {
+//     ret.tourId = ret._id.toString();
+//     delete ret._id;
+//     delete ret.__v;
+//     return ret;
+//   },
+// });
+
+TourSchema.set("toObject", {
+  transform: (doc, ret) => {
+    delete ret.__v;
+  },
+});
+
 const TourModel: Model<ITourDocument> = mongoose.model<ITourDocument>(
   "Tour",
   TourSchema

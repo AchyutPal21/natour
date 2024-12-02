@@ -3,6 +3,7 @@ import { ICreateTourDTO } from "@dtos/tour/ICreateTourDTO.js";
 import { ICreateTourResponseDTO } from "@dtos/tour/ICreateTourResponseDTO.js";
 import { ITourDocument, TourModel } from "@models/tourModel.js";
 import { ITourService } from "@services/ITourService.js";
+import { APIQueryFeatures } from "@shared/classes/APIQueryFeatures.js";
 import { TourQuery } from "@shared/types/queryObject.js";
 
 class TourService implements ITourService {
@@ -10,6 +11,49 @@ class TourService implements ITourService {
 
   constructor() {
     this.tourModel = TourModel;
+  }
+
+  private createPartialTourResponse(tours: ITourDocument[], fields: string) {
+    const queryFields = fields.split(",");
+
+    const toIncludeFieldsSet = new Set();
+    const toExcludeFieldsSet = new Set();
+
+    queryFields.forEach((field) => {
+      if (field.startsWith("-")) {
+        toExcludeFieldsSet.add(field.substring(1));
+      } else {
+        toIncludeFieldsSet.add(field);
+      }
+    });
+
+    return tours.map((tour) => {
+      const tourResponsePartialDTO: Partial<ICreateTourResponseDTO> = {};
+      for (const key in tour.toObject()) {
+        if (key === "_id") {
+          tourResponsePartialDTO["tourId"] = tour._id.toString();
+          continue;
+        }
+
+        // When their is no field to include but only to exclude fields i.e. ?fields=-field1,-field2,...etc
+        if (toIncludeFieldsSet.size === 0) {
+          // Exclude the fields and include rest field
+          if (toExcludeFieldsSet.has(key)) {
+            continue;
+          }
+
+          tourResponsePartialDTO[key as keyof ICreateTourResponseDTO] =
+            tour[key as keyof ITourDocument];
+        } else {
+          if (toIncludeFieldsSet.has(key)) {
+            tourResponsePartialDTO[key as keyof ICreateTourResponseDTO] =
+              tour[key as keyof ITourDocument];
+          }
+        }
+      }
+
+      return tourResponsePartialDTO;
+    });
   }
 
   private createTourResponse(tour: ITourDocument) {
@@ -60,6 +104,55 @@ class TourService implements ITourService {
     return tourResponse;
   }
 
+  async getAllTour(
+    query: TourQuery
+  ): Promise<Partial<ICreateTourResponseDTO>[]> {
+    const apiQueryFeatures = new APIQueryFeatures<ITourDocument>(
+      this.tourModel,
+      query
+    );
+
+    const tours = await apiQueryFeatures
+      .filterQuery()
+      .sortDocument()
+      .limitFields()
+      .paginate()
+      .execute();
+
+    if (query.fields) {
+      return this.createPartialTourResponse(tours, query.fields);
+    }
+
+    return tours.map((tour) => {
+      return this.createTourResponse(tour);
+    });
+  }
+
+  async getTourById(tourId: string): Promise<ICreateTourResponseDTO | null> {
+    const tour = await this.tourModel.findById(tourId);
+    if (!tour) {
+      return null;
+    }
+
+    const tourResponse = this.createTourResponse(tour);
+
+    return tourResponse;
+  }
+
+  async deleteTourById(tourId: string): Promise<ICreateTourResponseDTO | null> {
+    const deletedTour = await this.tourModel.findByIdAndDelete(tourId);
+
+    if (!deletedTour) return null;
+
+    return this.createTourResponse(deletedTour);
+  }
+}
+
+export { TourService };
+
+/*
+OLD CODE EXAMPLE
+
   async getAllTour(query: TourQuery): Promise<ICreateTourResponseDTO[]> {
     // Filtering the query and pagination
     const initial = { ...query };
@@ -91,6 +184,7 @@ class TourService implements ITourService {
     }
 
     // Field limiting
+    // -field_name means exclude the field
     // selecting field => ?fields=tourName,price,average...
     if (query.fields) {
       const selectedFields = query.fields.replaceAll(",", " ");
@@ -98,9 +192,9 @@ class TourService implements ITourService {
     }
 
     // Pagination
-    if (query.page && query.limit) {
-      const page = Math.max(1, query.page); // Default to page 1
-      const limit = Math.max(1, query.limit); // Default 1 item per page
+    if (query.page || query.limit) {
+      const page = Math.max(1, query.page || 1); // Default to page 1
+      const limit = Math.max(1, query.limit || 1); // Default 1 item per page
       const skip = (page - 1) * limit;
       toursQuery = toursQuery.skip(skip).limit(limit);
     }
@@ -113,24 +207,4 @@ class TourService implements ITourService {
     });
   }
 
-  async getTourById(tourId: string): Promise<ICreateTourResponseDTO | null> {
-    const tour = await this.tourModel.findById(tourId);
-    if (!tour) {
-      return null;
-    }
-
-    const tourResponse = this.createTourResponse(tour);
-
-    return tourResponse;
-  }
-
-  async deleteTourById(tourId: string): Promise<ICreateTourResponseDTO | null> {
-    const deletedTour = await this.tourModel.findByIdAndDelete(tourId);
-
-    if (!deletedTour) return null;
-
-    return this.createTourResponse(deletedTour);
-  }
-}
-
-export { TourService };
+*/

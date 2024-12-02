@@ -50,7 +50,7 @@ class TourController {
 
   async getTours(req: Request, res: Response, next: NextFunction) {
     try {
-      const query: TourQuery = req.query;
+      const query = req.query as TourQuery;
       const tours = await this.tourService.getAllTour(query);
       res.status(HttpStatus.OK).json({
         status: "success",
