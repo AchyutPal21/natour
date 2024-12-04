@@ -1,9 +1,11 @@
 import { TourDifficulty } from "@enums/TourDifficultyEnum.js";
+
 import mongoose, { Document, Model, Schema, Types } from "mongoose";
 
 interface ITourDocument extends Document {
   _id: Types.ObjectId;
   tourName: string;
+  slug: string;
   duration: number;
   maxGroupSize: number;
   difficulty: TourDifficulty.EASY;
@@ -28,6 +30,8 @@ const TourSchema = new Schema<ITourDocument>(
       unique: true,
     },
 
+    slug: String,
+
     ratings: {
       type: Number,
       default: 4.5,
@@ -51,6 +55,10 @@ const TourSchema = new Schema<ITourDocument>(
     difficulty: {
       type: String,
       required: [true, "A tour must have a difficulty"],
+      enum: {
+        values: ["easy", "medium", "difficult"],
+        message: "Difficulty need to be: easy/medium/difficult",
+      },
     },
 
     ratingsAverage: {
@@ -60,6 +68,14 @@ const TourSchema = new Schema<ITourDocument>(
     priceDiscount: {
       type: Number,
       default: 0,
+      validate: {
+        validator: function (val: number) {
+          // ! this keyword points to the current document on new document creation and not upon updating
+          return this.price > val;
+        },
+
+        message: "Discount price: {VALUE} should be below regular price",
+      },
     },
 
     summary: {
@@ -90,6 +106,13 @@ const TourSchema = new Schema<ITourDocument>(
   }
 );
 
+// toJSON: { virtuals: true },
+// toObject: { virtuals: true },
+
+// TourSchema.virtual("durationWeeks").get(function () {
+//   return +(this.duration / 7).toFixed(1);
+// });
+
 // TourSchema.set("toObject", {
 //   transform: (doc, ret) => {
 //     ret.tourId = ret._id.toString();
@@ -104,6 +127,23 @@ TourSchema.set("toObject", {
     delete ret.__v;
   },
 });
+
+// MONGOOSE MIDDLEWAREs HOOKS: DOCUMENT, QUERY, AGGREGATE, MODEL
+
+// DOCUMENT MIDDLEWARE
+// pre->save will get called just before the .save() .create() and not for .insertMany(), update(), findByIdUpdate()..
+TourSchema.pre("save", function (next) {
+  this.slug = this.tourName
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  next();
+});
+
+// QUERY MIDDLEWARE
+//
 
 const TourModel: Model<ITourDocument> = mongoose.model<ITourDocument>(
   "Tour",

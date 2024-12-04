@@ -9,7 +9,7 @@ type TourQuery = Partial<ICreateTourDTO> & {
   [key: string]: string | number | undefined;
 };
 
-type TourStats = Partial<{
+type TourAggregate = Partial<{
   _id?: string | null;
   totalTours?: number;
   totalRatings?: number;
@@ -22,4 +22,4 @@ type TourStats = Partial<{
   month?: number;
 }>;
 
-export { TourQuery, TourStats };
+export { TourAggregate, TourQuery };

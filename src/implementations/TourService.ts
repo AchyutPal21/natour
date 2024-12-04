@@ -4,7 +4,7 @@ import { ICreateTourResponseDTO } from "@dtos/tour/ICreateTourResponseDTO.js";
 import { ITourDocument, TourModel } from "@models/tourModel.js";
 import { ITourService } from "@services/ITourService.js";
 import { APIQueryFeatures } from "@shared/classes/APIQueryFeatures.js";
-import { TourQuery, TourStats } from "@shared/types/toursTypes.js";
+import { TourAggregate, TourQuery } from "@shared/types/toursTypes.js";
 
 class TourService implements ITourService {
   private tourModel;
@@ -153,7 +153,7 @@ class TourService implements ITourService {
     return this.createTourResponse(deletedTour);
   }
 
-  public async getToursStats(): Promise<TourStats[]> {
+  public async getToursStats(): Promise<TourAggregate[]> {
     const stats = await this.tourModel.aggregate([
       {
         $match: { ratingsAverage: { $gte: 4 } },
@@ -180,7 +180,7 @@ class TourService implements ITourService {
     return stats;
   }
 
-  public async getToursYearlyPlan(year: number): Promise<TourStats[]> {
+  public async getToursYearlyPlan(year: number): Promise<TourAggregate[]> {
     const monthlyTourPlan = await this.tourModel.aggregate([
       {
         $unwind: "$startDates",
