@@ -1,3 +1,4 @@
+import { InternalException } from "@exceptions/InternalException.js";
 import mongoose from "mongoose";
 import {
   DATABASE_CONNECTION_URL,
@@ -14,8 +15,11 @@ async function establishDataBaseConnection() {
   try {
     const connection = await mongoose.connect(URI);
     console.log("Connection to MongoDB successful!!!");
-  } catch (error) {
+  } catch (error: any) {
     console.error("Connection to MongoDB failed!!!", error);
+    throw new InternalException("Connection to Database failed!", {
+      detail: error.message as string,
+    });
   }
 }
 
