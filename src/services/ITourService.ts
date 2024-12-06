@@ -3,6 +3,7 @@ import { ICreateTourResponseDTO } from "@dtos/tour/ICreateTourResponseDTO.js";
 import { TourAggregate, TourQuery } from "@shared/types/toursTypes.js";
 
 interface ITourService {
+  validateAndCreateTour(data: ICreateTourDTO): Promise<ICreateTourResponseDTO>;
   createTour(tour: ICreateTourDTO): Promise<ICreateTourResponseDTO>;
   updateTour(
     tourId: string,

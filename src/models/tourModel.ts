@@ -34,7 +34,7 @@ const TourSchema = new Schema<ITourDocument>(
 
     ratings: {
       type: Number,
-      default: 4.5,
+      default: 0,
     },
 
     price: {
@@ -63,6 +63,7 @@ const TourSchema = new Schema<ITourDocument>(
 
     ratingsAverage: {
       type: Number,
+      default: 0,
     },
 
     priceDiscount: {
@@ -70,7 +71,7 @@ const TourSchema = new Schema<ITourDocument>(
       default: 0,
       validate: {
         validator: function (val: number) {
-          // ! this keyword points to the current document on new document creation and not upon updating
+          // ! "this" keyword points to the current document on new document creation and not upon updating
           return this.price > val;
         },
 

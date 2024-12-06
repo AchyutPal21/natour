@@ -1,10 +1,16 @@
+import { CreateTourDTO } from "@dtos/tour/CreateTourDTO.js";
 import { CreateTourResponseDTO } from "@dtos/tour/CreateTourResponseDTO.js";
 import { ICreateTourDTO } from "@dtos/tour/ICreateTourDTO.js";
 import { ICreateTourResponseDTO } from "@dtos/tour/ICreateTourResponseDTO.js";
+import { BadRequestException } from "@exceptions/BadRequestException.js";
+import { NotFoundException } from "@exceptions/NotFoundException.js";
 import { ITourDocument, TourModel } from "@models/tourModel.js";
 import { ITourService } from "@services/ITourService.js";
 import { APIQueryFeatures } from "@shared/classes/APIQueryFeatures.js";
 import { TourAggregate, TourQuery } from "@shared/types/toursTypes.js";
+import { handleMongooseException } from "@utils/handleMongooseException.js";
+import { plainToInstance } from "class-transformer";
+import { validate } from "class-validator";
 
 class TourService implements ITourService {
   private tourModel;
@@ -82,201 +88,190 @@ class TourService implements ITourService {
       const newTour = await this.tourModel.create(tour);
       const tourResponse = this.createTourResponse(newTour);
       return tourResponse;
-    } catch (error) {
-      console.error(error);
-      throw new Error("Error while creating the tour");
+    } catch (error: any) {
+      handleMongooseException(error);
     }
+  }
+
+  public async validateAndCreateTour(
+    data: ICreateTourDTO
+  ): Promise<ICreateTourResponseDTO> {
+    // Transform incoming plain object to a class instance
+    const createTourDto = plainToInstance(CreateTourDTO, data);
+    // Perform validation
+    const errors = await validate(createTourDto);
+
+    if (errors.length) {
+      const reason = errors.map((error) => {
+        const constraints = Object.values(error.constraints || {});
+        return {
+          [error.property]: constraints.length
+            ? constraints[0]
+            : "Invalid field type",
+        };
+      });
+
+      throw new BadRequestException("Bad Request", {
+        detail: "Invalid fields type",
+        reason,
+      });
+    }
+
+    return await this.createTour(createTourDto);
   }
 
   public async updateTour(
     tourId: string,
     updates: Partial<ICreateTourDTO>
   ): Promise<ICreateTourResponseDTO | null> {
-    const updateTour = await this.tourModel.findByIdAndUpdate(tourId, updates, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!updateTour) {
-      return null;
+    try {
+      const updatedTour = await this.tourModel.findByIdAndUpdate(
+        tourId,
+        updates,
+        { new: true, runValidators: true }
+      );
+      if (!updatedTour) {
+        throw new NotFoundException(`Tour with ID ${tourId} not found`);
+      }
+      return this.createTourResponse(updatedTour);
+    } catch (error: any) {
+      handleMongooseException(error);
     }
-
-    const tourResponse = this.createTourResponse(updateTour);
-
-    return tourResponse;
   }
 
   public async getAllTour(
     query: TourQuery
   ): Promise<Partial<ICreateTourResponseDTO>[]> {
-    const apiQueryFeatures = new APIQueryFeatures<ITourDocument>(
-      this.tourModel,
-      query
-    );
+    try {
+      const apiQueryFeatures = new APIQueryFeatures<ITourDocument>(
+        this.tourModel,
+        query
+      );
 
-    const tours = await apiQueryFeatures
-      .filterQuery()
-      .sortDocument()
-      .limitFields()
-      .paginate()
-      .execute();
+      const tours = await apiQueryFeatures
+        .filterQuery()
+        .sortDocument()
+        .limitFields()
+        .paginate()
+        .execute();
 
-    if (query.fields) {
-      return this.createPartialTourResponse(tours, query.fields);
+      if (query.fields) {
+        return this.createPartialTourResponse(tours, query.fields);
+      }
+
+      return tours.map((tour) => {
+        return this.createTourResponse(tour);
+      });
+    } catch (error: any) {
+      handleMongooseException(error);
     }
-
-    return tours.map((tour) => {
-      return this.createTourResponse(tour);
-    });
   }
 
   public async getTourById(
     tourId: string
   ): Promise<ICreateTourResponseDTO | null> {
-    const tour = await this.tourModel.findById(tourId);
-    if (!tour) {
-      return null;
+    try {
+      const tour = await this.tourModel.findById(tourId);
+
+      if (!tour) {
+        throw new NotFoundException(`Tour with ID ${tourId} not found`);
+      }
+
+      return this.createTourResponse(tour);
+    } catch (error: any) {
+      handleMongooseException(error);
     }
-
-    const tourResponse = this.createTourResponse(tour);
-
-    return tourResponse;
   }
 
   public async deleteTourById(
     tourId: string
   ): Promise<ICreateTourResponseDTO | null> {
-    const deletedTour = await this.tourModel.findByIdAndDelete(tourId);
+    try {
+      const deletedTour = await this.tourModel.findByIdAndDelete(tourId);
 
-    if (!deletedTour) return null;
+      if (!deletedTour) {
+        throw new NotFoundException(`Tour with ID ${tourId} not found`);
+      }
 
-    return this.createTourResponse(deletedTour);
+      return this.createTourResponse(deletedTour);
+    } catch (error: any) {
+      handleMongooseException(error);
+    }
   }
 
   public async getToursStats(): Promise<TourAggregate[]> {
-    const stats = await this.tourModel.aggregate([
-      {
-        $match: { ratingsAverage: { $gte: 4 } },
-      },
-      {
-        $group: {
-          _id: "$difficulty",
-          totalTours: { $sum: 1 },
-          totalRatings: { $sum: "$ratings" },
-          averageRating: { $avg: "$ratingsAverage" },
-          averagePrice: { $avg: "$price" },
-          minimumPrice: { $min: "$price" },
-          maximumPrice: { $max: "$price" },
+    try {
+      const stats = await this.tourModel.aggregate([
+        {
+          $match: { ratingsAverage: { $gte: 4 } },
         },
-      },
-      {
-        $sort: { minimumPrice: 1 },
-      },
-      // {
-      //   $match: { _id: { $ne: "easy" } },
-      // },
-    ]);
+        {
+          $group: {
+            _id: "$difficulty",
+            totalTours: { $sum: 1 },
+            totalRatings: { $sum: "$ratings" },
+            averageRating: { $avg: "$ratingsAverage" },
+            averagePrice: { $avg: "$price" },
+            minimumPrice: { $min: "$price" },
+            maximumPrice: { $max: "$price" },
+          },
+        },
+        {
+          $sort: { minimumPrice: 1 },
+        },
+        // {
+        //   $match: { _id: { $ne: "easy" } },
+        // },
+      ]);
 
-    return stats;
+      return stats;
+    } catch (error: any) {
+      handleMongooseException(error);
+    }
   }
 
   public async getToursYearlyPlan(year: number): Promise<TourAggregate[]> {
-    const monthlyTourPlan = await this.tourModel.aggregate([
-      {
-        $unwind: "$startDates",
-      },
-      {
-        $match: {
-          startDates: {
-            $gte: new Date(`${year}-01-01`),
-            $lte: new Date(`${year}-12-31`),
+    try {
+      const monthlyTourPlan = await this.tourModel.aggregate([
+        {
+          $unwind: "$startDates",
+        },
+        {
+          $match: {
+            startDates: {
+              $gte: new Date(`${year}-01-01`),
+              $lte: new Date(`${year}-12-31`),
+            },
           },
         },
-      },
-      {
-        $group: {
-          _id: { $month: "$startDates" },
-          toursPerMonth: { $sum: 1 },
-          tours: { $push: "$tourName" },
+        {
+          $group: {
+            _id: { $month: "$startDates" },
+            toursPerMonth: { $sum: 1 },
+            tours: { $push: "$tourName" },
+          },
         },
-      },
-      {
-        $addFields: { month: "$_id" },
-      },
-      {
-        $project: {
-          _id: 0,
+        {
+          $addFields: { month: "$_id" },
         },
-      },
-      {
-        $sort: {
-          toursPerMonth: -1,
-          month: 1,
+        {
+          $project: {
+            _id: 0,
+          },
         },
-      },
-    ]);
+        {
+          $sort: {
+            toursPerMonth: -1,
+            month: 1,
+          },
+        },
+      ]);
 
-    return monthlyTourPlan;
+      return monthlyTourPlan;
+    } catch (error: any) {
+      handleMongooseException(error);
+    }
   }
 }
 
 export { TourService };
-
-/*
-OLD CODE EXAMPLE
-
-  async getAllTour(query: TourQuery): Promise<ICreateTourResponseDTO[]> {
-    // Filtering the query and pagination
-    const initial = { ...query };
-    const excludeFields = ["sort", "page", "fields", "limit"];
-    excludeFields.forEach(
-      (field: string) => field in initial && delete initial[field]
-    );
-
-    // query string => difficulty=medium&maxGroupSize[gte]=10
-    // This gets converted into => { difficulty: 'medium', maxGroupSize: { 'gte': '10' } }
-    let queryString = JSON.stringify(initial);
-    // In mongo we need to use {value: {$gte: 5}}
-    queryString = queryString.replace(
-      /\b(gt|gte|lt|lte)\b/g,
-      (match) => `$${match}`
-    );
-
-    const searchQuery = JSON.parse(queryString);
-
-    // Building the query
-    let toursQuery = this.tourModel.find(searchQuery);
-
-    // Sorting
-    // sorting query => ?sort=-ratingsAverage,price
-    // when come multiple fields we have to separate them by space
-    if (query.sort) {
-      const sortingFields = query.sort.replaceAll(",", " ");
-      toursQuery = toursQuery.sort(sortingFields);
-    }
-
-    // Field limiting
-    // -field_name means exclude the field
-    // selecting field => ?fields=tourName,price,average...
-    if (query.fields) {
-      const selectedFields = query.fields.replaceAll(",", " ");
-      toursQuery = toursQuery.select(selectedFields);
-    }
-
-    // Pagination
-    if (query.page || query.limit) {
-      const page = Math.max(1, query.page || 1); // Default to page 1
-      const limit = Math.max(1, query.limit || 1); // Default 1 item per page
-      const skip = (page - 1) * limit;
-      toursQuery = toursQuery.skip(skip).limit(limit);
-    }
-
-    // Finally executing the query
-    const tourQueryResult = await toursQuery;
-
-    return tourQueryResult.map((tour) => {
-      return this.createTourResponse(tour);
-    });
-  }
-
-*/

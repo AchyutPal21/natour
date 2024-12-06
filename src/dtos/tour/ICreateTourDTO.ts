@@ -4,11 +4,8 @@ interface ICreateTourDTO {
   tourName: string;
   duration: number;
   maxGroupSize: number;
-  difficulty: TourDifficulty.EASY;
-  ratings: number;
-  ratingsAverage: number;
+  difficulty: TourDifficulty;
   price: number;
-  priceDiscount: number;
   summary: string;
   description: string;
   imageCover: string;
