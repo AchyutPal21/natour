@@ -1,6 +1,7 @@
-/* import { CreateUserDTO } from "@dtos/user/CreateUserDTO.js";
+import { CreateUserDTO } from "@dtos/user/CreateUserDTO.js";
 import { HttpStatus } from "@enums/HttpStatusEnum.js";
-import { UserServiceImpl } from "@implementations/UserService.js";
+import { ResponseCode } from "@enums/ResponseCodesEnum.js";
+import { UserService } from "@implementations/UserService.js";
 import { IUserService } from "@services/IUserService.js";
 import { NextFunction, Request, Response } from "express";
 
@@ -8,7 +9,7 @@ class UserController {
   private userService: IUserService;
 
   constructor() {
-    this.userService = new UserServiceImpl();
+    this.userService = new UserService();
     this.registerUser = this.registerUser.bind(this);
     this.getUser = this.getUser.bind(this);
     this.getUsers = this.getUsers.bind(this);
@@ -21,17 +22,16 @@ class UserController {
     res: Response,
     next: NextFunction
   ): Promise<void> {
-    try {
-      const { userName, userEmail, userPassword } = req.body;
-      const userDto = new CreateUserDTO(userName, userEmail, userPassword);
-      const user = await this.userService.createUser(userDto);
-      res.status(HttpStatus.CREATED).json(user);
-    } catch (error) {
-      console.error(`Error while registering the user`, error);
-      res.status(HttpStatus.UNPROCESSABLE_ENTITY).json({
-        data: error,
-      });
-    }
+    const { userName, userEmail, userPassword } = req.body;
+    const userDto = new CreateUserDTO(userName, userEmail, userPassword);
+    const user = await this.userService.validateAndCreateUser(userDto);
+    res.status(HttpStatus.CREATED).json({
+      status: "success",
+      code: ResponseCode.CREATED,
+      data: {
+        user,
+      },
+    });
   }
 
   async getUsers(req: Request, res: Response, next: NextFunction) {
@@ -62,4 +62,3 @@ class UserController {
 }
 
 export default new UserController();
- */
