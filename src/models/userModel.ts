@@ -65,6 +65,17 @@ UserSchema.pre("save", async function (next) {
   next();
 });
 
+// Instance methods
+// UserSchema.methods.activateUserAccount =
+//   async function (): Promise<IUserDocument> {
+//     if (this.userIsActive) return this as IUserDocument;
+
+//     // Update the user account and set `userIsActive` to true
+//     this.userIsActive = true;
+//     await this.save();
+//     return this as IUserDocument;
+//   };
+
 const UserModel: Model<IUserDocument> = mongoose.model<IUserDocument>(
   "User",
   UserSchema

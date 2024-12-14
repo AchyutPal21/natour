@@ -6,8 +6,9 @@ interface IUserService {
   validateAndCreateUser(user: ICreateUserDTO): Promise<IUserResponseDTO>;
   getUserByEmailId(userEmail: string): Promise<IUserResponseDTO>;
   updateUserPasswordByEmailId(userEmail: string): Promise<IUserResponseDTO>;
-  activateUserAccount(userEmail: string): Promise<IUserResponseDTO>;
-  deactivateUserAccount(userEmail: string): Promise<IUserResponseDTO>;
+  updateUserEmailVerification(
+    userEmail: string
+  ): Promise<IUserResponseDTO | null>;
   promoteUser(userEmail: string): Promise<IUserResponseDTO>;
   demoteUser(userEmail: string): Promise<IUserResponseDTO>;
 }

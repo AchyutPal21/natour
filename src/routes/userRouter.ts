@@ -9,7 +9,8 @@ const router = Router();
 router.param("id", validateId("USER"));
 
 router.get("/", userController.getUser);
-router.post("/signup", catchAsync(userController.registerUser));
+router.post("/auth/signup", catchAsync(userController.registerUser));
+router.get("/auth/verify-email", catchAsync(userController.verifyUserEmail));
 
 router.get("/:id", userController.getUser);
 router.patch("/:id", userController.updateUser);

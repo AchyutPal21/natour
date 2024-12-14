@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{> styles}}
+</head>
+    <body>
+        <div class="email-container">
+            {{> header title="Email Verification"}}
+            <p>Hello {{userName}},</p>
+            <p>Please click the button below to verify your email address.</p>
+            <p>verification link expires in 1 hour.</p>
+            <a href="{{verificationLink}}" class="button">Verify Email</a>
+            <p>If you did not sign up for this account, you can safely ignore this email.</p>
+            {{> footer year=year}}
+        </div>
+    </body>
+</html>

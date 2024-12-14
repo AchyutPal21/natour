@@ -3,6 +3,7 @@ import { ICreateUserDTO } from "@dtos/user/ICreateUserDTO.js";
 import { IUserResponseDTO } from "@dtos/user/IUserResponseDTO.js";
 import { UserResponseDTO } from "@dtos/user/UserResponseDTO.js";
 import { BadRequestException } from "@exceptions/BadRequestException.js";
+import { NotFoundException } from "@exceptions/NotFoundException.js";
 import { IUserDocument, UserModel } from "@models/userModel.js";
 import { IUserService } from "@services/IUserService.js";
 import { handleMongooseException } from "@utils/handleMongooseException.js";
@@ -14,24 +15,6 @@ class UserService implements IUserService {
 
   constructor() {
     this.userModel = UserModel;
-  }
-  getUserByEmailId(userEmail: string): Promise<IUserResponseDTO> {
-    throw new Error("Method not implemented.");
-  }
-  updateUserPasswordByEmailId(userEmail: string): Promise<IUserResponseDTO> {
-    throw new Error("Method not implemented.");
-  }
-  activateUserAccount(userEmail: string): Promise<IUserResponseDTO> {
-    throw new Error("Method not implemented.");
-  }
-  deactivateUserAccount(userEmail: string): Promise<IUserResponseDTO> {
-    throw new Error("Method not implemented.");
-  }
-  promoteUser(userEmail: string): Promise<IUserResponseDTO> {
-    throw new Error("Method not implemented.");
-  }
-  demoteUser(userEmail: string): Promise<IUserResponseDTO> {
-    throw new Error("Method not implemented.");
   }
 
   private createUserResponse(user: IUserDocument): IUserResponseDTO {
@@ -76,6 +59,49 @@ class UserService implements IUserService {
     }
 
     return await this.createUser(createUserDto);
+  }
+
+  // Initial email verification when user sign-up
+  async updateUserEmailVerification(
+    userEmail: string
+  ): Promise<IUserResponseDTO | null> {
+    const user = await this.getUserByEmailId(userEmail);
+    if (user.userIsActive) {
+      throw new BadRequestException("Email is already verified");
+    }
+
+    const updatedUser = await this.userModel.findOneAndUpdate(
+      { userEmail: user.userEmail },
+      { userIsActive: true },
+      { runValidators: true, new: true }
+    );
+
+    if (!updatedUser) {
+      throw new NotFoundException("User not found during update");
+    }
+
+    return this.createUserResponse(updatedUser);
+  }
+
+  async getUserByEmailId(userEmail: string): Promise<IUserResponseDTO> {
+    const user = await this.userModel.findOne({ userEmail });
+
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    return user;
+  }
+
+  updateUserPasswordByEmailId(userEmail: string): Promise<IUserResponseDTO> {
+    throw new Error("Method not implemented.");
+  }
+
+  promoteUser(userEmail: string): Promise<IUserResponseDTO> {
+    throw new Error("Method not implemented.");
+  }
+  demoteUser(userEmail: string): Promise<IUserResponseDTO> {
+    throw new Error("Method not implemented.");
   }
 }
 
