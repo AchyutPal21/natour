@@ -3,6 +3,7 @@ interface IUserResponseDTO {
   userEmail: string;
   userRole: string;
   userIsActive: boolean;
+  jwtSignToken?: string | undefined;
 }
 
 export { IUserResponseDTO };

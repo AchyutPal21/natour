@@ -23,13 +23,13 @@ function generateJwtAccessToken(userPayload: UserAccessTokenPayload): string {
 }
 
 function generateJwtVerificationToken(email: string): string {
-  return jwt.sign({ email }, JWT_SECRET, {
+  return jwt.sign({ userEmail: email }, JWT_SECRET, {
     algorithm: "HS512",
     expiresIn: JWT_VERIFICATION_TOKEN_EXPIRES_IN,
   });
 }
 
-function verifyJwtVerificationToken(token: string): IJwtPayloadExtended {
+function verifyJwtToken(token: string): IJwtPayloadExtended {
   return jwt.verify(token, JWT_SECRET) as IJwtPayloadExtended;
 }
 
@@ -37,5 +37,5 @@ export {
   generateJwtAccessToken,
   generateJwtRefreshToken,
   generateJwtVerificationToken,
-  verifyJwtVerificationToken,
+  verifyJwtToken,
 };
